@@ -8,11 +8,9 @@ sw=insightface.model_zoo.get_model(S+'/models/inswapper_128.onnx',providers=['CP
 gf=ort.InferenceSession(S+'/models/gfpgan_1.4.onnx',providers=['CPUExecutionProvider'])
 gin=gf.get_inputs()[0].name
 # source identity: barber from video 2
-embs=[]
-for f in ['src/s_10.jpg','src/s_11.jpg','src/s_12.jpg','src/s_06.jpg']:
-    fs=app.get(cv2.imread(f)); fs=sorted(fs,key=lambda x:-(x.bbox[2]-x.bbox[0]))
-    embs.append(fs[0].normed_embedding)
-src=fs[0]; e=np.mean(embs,0); src.embedding=e/np.linalg.norm(e)*np.linalg.norm(fs[0].embedding)
+fs=app.get(cv2.imread('src2/10.jpg')); src=max(fs,key=lambda x:x.bbox[2]-x.bbox[0])
+e=np.load('src_emb.npy'); src.embedding=e*np.linalg.norm(src.embedding)
+OUTD=sys.argv[3] if len(sys.argv)>3 else 'v1s'
 # target identity: AI barber in video1 frame 1 (leftmost standing face)
 f0=app.get(cv2.imread('v1/0001.png')); ref=sorted(f0,key=lambda x:x.bbox[1])[0].normed_embedding
 FFHQ=np.array([[192.98138,239.94708],[318.90277,240.1936],[256.63416,314.01935],[201.26117,371.41043],[313.08905,371.15118]],np.float32)
@@ -36,6 +34,8 @@ for f in files[a:b]:
         sim=float(np.dot(fc.normed_embedding,ref))
         if sim>0.35:
             out=sw.get(out,fc,src,paste_back=True)
+            f2=[g for g in app.get(out) if np.linalg.norm(g.bbox[:2]-fc.bbox[:2])<40]
+            out=sw.get(out,f2[0] if f2 else fc,src,paste_back=True)
             out=enhance(out,fc)
-    cv2.imwrite('v1s/'+os.path.basename(f),out)
+    cv2.imwrite(OUTD+'/'+os.path.basename(f),out)
     print(f,[round(float(np.dot(fc.normed_embedding,ref)),2) for fc in app.get(img)][:3],flush=True)

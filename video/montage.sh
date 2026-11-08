@@ -29,10 +29,10 @@ drawtext=fontfile=$D:text='Votre style, notre passion':fontsize=50:fontcolor=whi
 # F real barber + client
 ffmpeg -v error -y -ss 13.0 -t 2.3 -i $V2 -vf "$V2F,$grad,$(tt 'DES CLIENTS SATISFAITS' 120 1400 0.1 white)" $ENC $T/f.mp4
 # G barber frontal
-ffmpeg -v error -y -ss 15.4 -t 1.5 -i $V2 -vf "$V2F,$grad,$(tt 'VOTRE BARBIER' 130 1400 0.05 $GOLD)" $ENC $T/g.mp4
+ffmpeg -v error -y -ss 15.65 -t 1.35 -i $V2 -vf "$V2F,$grad,$(tt 'VOTRE BARBIER' 130 1400 0.05 $GOLD)" $ENC $T/g.mp4
 # H end card (7.2s) on last swapped frame
 LAST=$(ls $FR/*.png | tail -1)
-ffmpeg -v error -y -loop 1 -t 7.2 -framerate 30 -i $LAST -filter_complex "[0]scale=-2:1920,crop=1080:1920:'(iw-1080)/2+40*t':0,boxblur=12:2,eq=brightness=-0.32,\
+ffmpeg -v error -y -loop 1 -t 7.35 -framerate 30 -i $LAST -filter_complex "[0]scale=-2:1920,crop=1080:1920:'(iw-1080)/2+40*t':0,boxblur=12:2,eq=brightness=-0.32,\
 drawbox=x=140:y=400:w=800:h=4:color=$GOLD:t=fill,\
 $(tt 'SABER' 260 480 0.1 white),$(tt 'BARBERSHOP' 140 740 0.3 $GOLD),\
 $(tt 'RÉSERVEZ DÈS MAINTENANT' 100 1000 0.8 white),\
@@ -41,10 +41,11 @@ drawtext=fontfile=$D:text='Instagram / TikTok':fontsize=46:fontcolor=white@0.8:x
 drawtext=fontfile=$D:text='@saberbarbershop_mtl':fontsize=66:fontcolor=white:x=(w-tw)/2:y=1310:alpha='min(1,max(0,(t-1.3)*3))',\
 drawtext=fontfile=$D:text='WhatsApp':fontsize=46:fontcolor=white@0.8:x=(w-tw)/2:y=1460:alpha='min(1,max(0,(t-1.8)*3))',\
 drawtext=fontfile=$B:text='+1 438-308-3228':fontsize=130:fontcolor=$GOLD:x=(w-tw)/2:y=1520:alpha='min(1,max(0,(t-1.8)*3))',\
-fade=t=out:st=6.5:d=0.7" $ENC $T/h.mp4
+fade=t=out:st=6.75:d=0.6" $ENC $T/h.mp4
 printf "file '%s'\n" $T/a.mp4 $T/b.mp4 $T/c.mp4 $T/d.mp4 $T/e.mp4 $T/f.mp4 $T/g.mp4 $T/h.mp4 > $T/list.txt
 ffmpeg -v error -y -f concat -safe 0 -i $T/list.txt -c copy $T/video.mp4
 # audio: music from video 2, extended to 30s
-ffmpeg -v error -y -i $V2 -filter_complex "[0:a]atrim=0:23.2,asetpts=N/SR/TB[a1];[0:a]atrim=8:16.5,asetpts=N/SR/TB[a2];[a1][a2]acrossfade=d=1,atrim=0:30,afade=t=in:d=0.3,afade=t=out:st=28:d=2[a]" -map "[a]" -c:a aac -b:a 192k $T/audio.m4a
+ffmpeg -v error -y -i $V2 -vn -ac 2 -ar 44100 $T/music.wav
+ffmpeg -v error -y -t 21.2 -i $T/music.wav -ss 1.0 -t 10.5 -i $T/music.wav -filter_complex "[0][1]acrossfade=d=0.6:c1=tri:c2=tri,atrim=0:30,afade=t=in:d=0.2,afade=t=out:st=28.8:d=1.2[a]" -map "[a]" -c:a aac -b:a 192k $T/audio.m4a
 ffmpeg -v error -y -i $T/video.mp4 -i $T/audio.m4a -map 0:v -map 1:a -c:v copy -c:a copy -t 30 -movflags +faststart $OUT
 ffprobe -v error -show_entries format=duration -of csv=p=0 $OUT
